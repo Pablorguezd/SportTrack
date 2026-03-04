@@ -3,274 +3,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FitTrack Pro - iOS 26</title>
+    <title>FitTrack Pro</title>
+    
+    <link rel="icon" type="image/png" href="https://ui-avatars.com/api/?name=FT&background=007AFF&color=fff&size=128">
+    <link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=FT&background=007AFF&color=fff&size=180">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        :root { 
-            --ios-bg: #F2F2F7; 
-            --ios-accent: #007AFF; 
-            --ios-card: rgba(255, 255, 255, 0.75);
-        }
-        body { 
-            font-family: 'Inter', -apple-system, sans-serif; 
-            background: var(--ios-bg); 
-            color: #1c1c1e;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .ios-glass { 
-            background: var(--ios-card); 
-            backdrop-filter: blur(25px) saturate(180%); 
-            -webkit-backdrop-filter: blur(25px) saturate(180%); 
-            border-radius: 28px; 
-            border: 0.5px solid rgba(255, 255, 255, 0.3); 
-        }
+        :root { --ios-bg: #F2F2F7; --ios-accent: #007AFF; }
+        body { font-family: 'Inter', sans-serif; background: var(--ios-bg); color: #1c1c1e; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .ios-glass { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(25px) saturate(180%); -webkit-backdrop-filter: blur(25px) saturate(180%); border-radius: 28px; border: 0.5px solid rgba(255, 255, 255, 0.3); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .tab-active { color: var(--ios-accent) !important; }
-        .btn-animate:active { transform: scale(0.96); }
+        .modal-active { transform: translateY(0) !important; opacity: 1 !important; pointer-events: auto !important; }
+        .btn-animate:active { transform: scale(0.96); opacity: 0.8; }
         
-        /* Animaciones */
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .animate-ios { animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* Modal estilo iOS Sheet */
+        .ios-modal { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top-left-radius: 30px; border-top-right-radius: 30px; transform: translateY(100%); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; padding: 20px; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); opacity: 0; pointer-events: none; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 90; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .overlay.active { opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body class="pb-32">
 
-    <header class="pt-14 px-6 pb-4 sticky top-0 z-50 bg-[#F2F2F7]/90 backdrop-blur-md">
-        <div id="live-activity" class="hidden mb-4 p-4 bg-black text-white rounded-[22px] flex justify-between items-center shadow-2xl animate-ios">
+    <div id="overlay" class="overlay" onclick="closeAllModals()"></div>
+
+    <header class="pt-14 px-6 pb-4 sticky top-0 z-50 bg-[#F2F2F7]/90 backdrop-blur-md border-b border-black/[0.03]">
+        <div id="live-activity" class="hidden mb-4 p-4 bg-black text-white rounded-[22px] flex justify-between items-center shadow-2xl">
             <div class="flex items-center gap-3">
                 <div class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></div>
                 <span id="timer" class="font-mono text-lg font-bold">00:00</span>
             </div>
-            <span class="text-[10px] font-black opacity-50 tracking-widest">ENTRENO ACTIVO</span>
+            <span class="text-[10px] font-black opacity-50 tracking-widest">ENTRENO EN CURSO</span>
         </div>
         <div class="flex justify-between items-end">
             <div>
-                <p id="current-date" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">MIÉRCOLES, 4 DE MARZO</p>
+                <p id="current-date" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1"></p>
                 <h1 id="page-title" class="text-3xl font-extrabold tracking-tight">Actividad</h1>
             </div>
-            <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-black/5 overflow-hidden">
-                <img src="https://ui-avatars.com/api/?name=User&background=F2F2F7&color=007AFF" alt="Profile">
-            </div>
+            <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-black/5">👤</div>
         </div>
     </header>
 
-    <main id="main-content" class="px-4 mt-2 space-y-6">
+    <main id="main-content" class="px-4 mt-4 space-y-6">
         
-        <div id="view-hoy" class="space-y-6 animate-ios">
+        <div id="view-hoy" class="space-y-6">
             <section class="ios-glass p-5">
                 <div class="flex justify-between items-center mb-4 px-1">
                     <h3 class="font-bold text-sm text-slate-400 uppercase tracking-tight">Marzo 2026</h3>
-                    <button class="text-blue-600 text-xs font-bold">Ver calendario</button>
+                    <button onclick="openModal('modal-calendario')" class="text-blue-600 text-xs font-bold">Ver calendario</button>
                 </div>
-                <div class="flex justify-between gap-2 overflow-x-auto no-scrollbar">
-                    <div class="flex flex-col items-center min-w-[52px] py-3 rounded-2xl bg-white/40 border border-white/20">
-                        <span class="text-[9px] font-black text-slate-400">LUN</span><span class="text-lg font-bold">2</span>
+                <div class="flex justify-between gap-2 overflow-x-auto no-scrollbar" id="calendar-strip">
                     </div>
-                    <div class="flex flex-col items-center min-w-[52px] py-3 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
-                        <span class="text-[9px] font-black opacity-70">MAR</span><span class="text-lg font-bold">3</span>
-                        <div class="w-1 h-1 bg-white rounded-full mt-1"></div>
-                    </div>
-                    <div class="flex flex-col items-center min-w-[52px] py-3 rounded-2xl bg-white/40 border border-white/20">
-                        <span class="text-[9px] font-black text-slate-400">MIE</span><span class="text-lg font-bold">4</span>
-                    </div>
-                    <div class="flex flex-col items-center min-w-[52px] py-3 rounded-2xl bg-white/40 border border-white/20 opacity-50">
-                        <span class="text-[9px] font-black text-slate-400">JUE</span><span class="text-lg font-bold">5</span>
-                    </div>
-                </div>
             </section>
 
             <section class="ios-glass p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <h3 class="font-bold text-lg">Intensidad</h3>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Puntos de esfuerzo</p>
-                    </div>
-                    <span id="intensity-val" class="text-4xl font-black text-blue-600">0</span>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg">Última Intensidad</h3>
+                    <span id="intensity-val" class="text-3xl font-black text-blue-600">0</span>
                 </div>
                 <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div id="intensity-bar" class="bg-blue-600 h-full w-0 transition-all duration-1000"></div>
+                    <div id="intensity-bar" class="bg-blue-600 h-full w-0 transition-all duration-700"></div>
                 </div>
             </section>
         </div>
 
-        <div id="view-training" class="hidden space-y-4 animate-ios">
-            <div class="ios-glass p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold">Rutina Libre</h2>
-                    <span class="bg-blue-100 text-blue-600 text-[10px] font-black px-3 py-1 rounded-full uppercase">Gym</span>
+        <div id="view-training" class="hidden space-y-6 pb-20">
+            <div id="workout-list" class="space-y-4">
                 </div>
-                <div id="sets-list" class="space-y-3">
-                    </div>
-                <button onclick="addSet()" class="w-full mt-6 py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold text-sm btn-animate">+ Añadir Serie</button>
-            </div>
-        </div>
-
-        <div id="view-historial" class="hidden animate-ios py-10 text-center">
-            <div class="ios-glass p-10">
-                <p class="text-slate-400 font-bold">No hay entrenamientos previos</p>
-            </div>
-        </div>
-        <div id="view-ajustes" class="hidden animate-ios py-4 space-y-2">
-            <div class="ios-glass p-4 flex justify-between items-center font-semibold"><span>Unidades</span><span class="text-blue-600">Métricas (Kg)</span></div>
-            <div class="ios-glass p-4 flex justify-between items-center font-semibold"><span>Notificaciones</span><span class="text-slate-300">Off</span></div>
-            <div class="ios-glass p-4 flex justify-between items-center font-semibold text-red-500" onclick="location.reload()"><span>Resetear App</span></div>
+            
+            <button onclick="openModal('modal-ejercicio')" class="w-full py-4 border-2 border-dashed border-slate-300 rounded-[22px] text-slate-400 font-bold text-sm btn-animate">
+                + Añadir Ejercicio
+            </button>
         </div>
     </main>
 
     <div class="fixed bottom-28 left-6 right-6 z-40">
-        <button id="main-btn" onclick="handleMainAction()" class="w-full py-5 bg-blue-600 text-white rounded-[24px] font-bold text-lg shadow-xl shadow-blue-200 btn-animate transition-all duration-300">
+        <button id="main-btn" onclick="toggleWorkout()" class="w-full py-5 bg-blue-600 text-white rounded-[24px] font-bold text-lg shadow-xl shadow-blue-200 btn-animate transition-all">
             Iniciar Entrenamiento
         </button>
     </div>
 
-    <nav class="fixed bottom-0 w-full h-24 bg-white/80 backdrop-blur-2xl border-t border-black/5 flex justify-around items-center px-8 safe-bottom z-50">
-        <button onclick="changeTab('hoy')" id="btn-hoy" class="flex flex-col items-center gap-1.5 tab-active">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
-            </svg>
-            <span class="text-[9px] font-black tracking-tighter">HOY</span>
-        </button>
+    <div id="modal-calendario" class="ios-modal h-[60vh]">
+        <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+        <h2 class="text-xl font-bold mb-4">Calendario de Actividad</h2>
+        <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 mb-2">
+            <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+        </div>
+        <div id="full-calendar-grid" class="grid grid-cols-7 gap-2">
+            </div>
+    </div>
 
-        <button onclick="changeTab('historial')" id="btn-historial" class="flex flex-col items-center gap-1.5 text-slate-400">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-            </svg>
-            <span class="text-[9px] font-black tracking-tighter">HISTORIAL</span>
-        </button>
+    <div id="modal-ejercicio" class="ios-modal h-[45vh]">
+        <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+        <h2 class="text-xl font-bold mb-6">¿Qué vas a entrenar?</h2>
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="addExercise('fuerza')" class="p-6 ios-glass bg-blue-50 border-blue-100 flex flex-col items-center gap-2">
+                <span class="text-3xl">💪</span>
+                <span class="font-bold text-blue-600 text-sm">Fuerza</span>
+            </button>
+            <button onclick="addExercise('cardio')" class="p-6 ios-glass bg-green-50 border-green-100 flex flex-col items-center gap-2">
+                <span class="text-3xl">🏃‍♂️</span>
+                <span class="font-bold text-green-600 text-sm">Cardio</span>
+            </button>
+        </div>
+    </div>
 
-        <button onclick="changeTab('ajustes')" id="btn-ajustes" class="flex flex-col items-center gap-1.5 text-slate-400">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 12h9.75" />
-            </svg>
-            <span class="text-[9px] font-black tracking-tighter">AJUSTES</span>
+    <nav class="fixed bottom-0 w-full h-24 bg-white/80 backdrop-blur-2xl border-t border-black/5 flex justify-around items-center px-8 z-50">
+        <button onclick="switchTab('hoy')" class="flex flex-col items-center gap-1 tab-active" id="tab-hoy">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/></svg>
+            <span class="text-[9px] font-black">HOY</span>
+        </button>
+        <button onclick="switchTab('historial')" class="flex flex-col items-center gap-1 text-slate-400" id="tab-historial">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+            <span class="text-[9px] font-black">HISTORIAL</span>
+        </button>
+        <button onclick="switchTab('ajustes')" class="flex flex-col items-center gap-1 text-slate-400" id="tab-ajustes">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 12h9.75"/></svg>
+            <span class="text-[9px] font-black">AJUSTES</span>
         </button>
     </nav>
 
     <script>
         let isTraining = false;
-        let seconds = 0;
-        let timerId = null;
-        let setIndex = 1;
+        let timerSeconds = 0;
+        let timerInterval;
 
-        // --- NAVEGACIÓN ---
-        function changeTab(tab) {
-            if(isTraining) return; // Bloquear navegación si entrena
-
-            const views = ['hoy', 'training', 'historial', 'ajustes'];
-            const titles = { hoy: 'Actividad', historial: 'Calendario', ajustes: 'Ajustes' };
-            
-            views.forEach(v => {
-                const el = document.getElementById('view-' + v);
-                if(el) el.classList.add('hidden');
-            });
-            
-            document.getElementById('view-' + tab).classList.remove('hidden');
-            document.getElementById('page-title').innerText = titles[tab] || 'Entreno';
-            
-            // Actualizar iconos
-            ['hoy', 'historial', 'ajustes'].forEach(t => {
-                const btn = document.getElementById('btn-' + t);
-                btn.classList.toggle('tab-active', t === tab);
-                btn.classList.toggle('text-slate-400', t !== tab);
-            });
+        // --- GESTIÓN DE MODALES ---
+        function openModal(id) {
+            document.getElementById(id).classList.add('modal-active');
+            document.getElementById('overlay').classList.add('active');
+        }
+        function closeAllModals() {
+            document.querySelectorAll('.ios-modal').forEach(m => m.classList.remove('modal-active'));
+            document.getElementById('overlay').classList.remove('active');
         }
 
         // --- ENTRENAMIENTO ---
-        function handleMainAction() {
+        function toggleWorkout() {
             const btn = document.getElementById('main-btn');
-            const dashboard = document.getElementById('view-hoy');
-            const trainingView = document.getElementById('view-training');
-            const liveActivity = document.getElementById('live-activity');
+            const viewHoy = document.getElementById('view-hoy');
+            const viewTraining = document.getElementById('view-training');
+            const liveAct = document.getElementById('live-activity');
 
-            if(!isTraining) {
-                // INICIAR
+            if (!isTraining) {
                 isTraining = true;
                 btn.innerText = "Finalizar Entrenamiento";
                 btn.classList.replace('bg-blue-600', 'bg-red-500');
-                btn.classList.replace('shadow-blue-200', 'shadow-red-200');
-                
-                dashboard.classList.add('hidden');
-                trainingView.classList.remove('hidden');
-                liveActivity.classList.remove('hidden');
-                
+                viewHoy.classList.add('hidden');
+                viewTraining.classList.remove('hidden');
+                liveAct.classList.remove('hidden');
                 startTimer();
-                if(setIndex === 1) addSet();
             } else {
-                // FINALIZAR
-                const confirmEnd = confirm("¿Quieres finalizar el entrenamiento?");
-                if(confirmEnd) {
+                if(confirm("¿Terminar entrenamiento?")) {
                     finishWorkout();
+                    btn.innerText = "Iniciar Entrenamiento";
+                    btn.classList.replace('bg-red-500', 'bg-blue-600');
+                    viewHoy.classList.remove('hidden');
+                    viewTraining.classList.add('hidden');
+                    liveAct.classList.add('hidden');
                 }
             }
         }
 
-        function addSet() {
-            const list = document.getElementById('sets-list');
+        function addExercise(type) {
+            const list = document.getElementById('workout-list');
+            const id = Date.now();
+            const card = document.createElement('div');
+            card.className = "ios-glass p-5 animate-ios space-y-4";
+            
+            if(type === 'fuerza') {
+                const nombre = prompt("Nombre del ejercicio (ej. Dominadas):") || "Ejercicio";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center"><h4 class="font-bold text-blue-600">${nombre}</h4><button onclick="this.parentElement.parentElement.remove()" class="text-xs text-slate-300">Quitar</button></div>
+                    <div id="sets-${id}" class="space-y-2"></div>
+                    <button onclick="addSetRow(${id})" class="text-xs font-bold text-blue-600">+ Añadir Serie</button>
+                `;
+            } else {
+                card.innerHTML = `
+                    <div class="flex justify-between items-center"><h4 class="font-bold text-green-600">Cardio</h4><button onclick="this.parentElement.parentElement.remove()" class="text-xs text-slate-300">Quitar</button></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><p class="text-[9px] font-bold text-slate-400">DISTANCIA (KM)</p><input type="number" step="0.1" class="w-full bg-slate-100 p-3 rounded-xl font-bold cardio-km"></div>
+                        <div><p class="text-[9px] font-bold text-slate-400">TIEMPO (MIN)</p><input type="number" class="w-full bg-slate-100 p-3 rounded-xl font-bold cardio-min"></div>
+                    </div>
+                `;
+            }
+            list.appendChild(card);
+            closeAllModals();
+        }
+
+        function addSetRow(id) {
+            const container = document.getElementById(`sets-${id}`);
             const row = document.createElement('div');
-            row.className = "flex items-center gap-3 bg-white/40 p-3 rounded-2xl animate-ios";
-            row.innerHTML = `
-                <span class="w-8 font-black text-blue-600 text-sm">#${setIndex++}</span>
-                <input type="number" placeholder="Kg" class="w-full bg-white/60 rounded-xl p-3 text-center font-bold weight-in">
-                <input type="number" placeholder="Reps" class="w-full bg-white/60 rounded-xl p-3 text-center font-bold reps-in">
-                <button onclick="this.parentElement.remove()" class="text-slate-300 px-2">✕</button>
-            `;
-            list.appendChild(row);
+            row.className = "flex gap-2 items-center animate-ios";
+            row.innerHTML = `<input type="number" placeholder="Kg" class="w-full bg-slate-100 p-2 rounded-lg text-center font-bold f-kg"><input type="number" placeholder="Reps" class="w-full bg-slate-100 p-2 rounded-lg text-center font-bold f-reps">`;
+            container.appendChild(row);
         }
 
         function finishWorkout() {
             isTraining = false;
-            clearInterval(timerId);
+            clearInterval(timerInterval);
+            let totalIntensity = 0;
             
-            // Calcular Intensidad
-            let totalVolume = 0;
-            const weights = document.querySelectorAll('.weight-in');
-            const reps = document.querySelectorAll('.reps-in');
+            // Calc Fuerza
+            document.querySelectorAll('.f-kg').forEach((el, i) => {
+                const kg = parseFloat(el.value) || 0;
+                const reps = parseFloat(document.querySelectorAll('.f-reps')[i].value) || 0;
+                totalIntensity += (kg * reps) / 100;
+            });
             
-            weights.forEach((w, i) => {
-                const vW = parseFloat(w.value) || 0;
-                const vR = parseFloat(reps[i].value) || 0;
-                totalVolume += (vW * vR);
+            // Calc Cardio
+            document.querySelectorAll('.cardio-km').forEach(el => {
+                totalIntensity += (parseFloat(el.value) || 0) * 10;
             });
 
-            const score = Math.min(Math.floor(totalVolume / 100), 100);
+            const final = Math.min(Math.round(totalIntensity), 100);
+            document.getElementById('intensity-val').innerText = final;
+            document.getElementById('intensity-bar').style.width = final + '%';
             
-            // Actualizar UI Dashboard
-            document.getElementById('intensity-val').innerText = score;
-            document.getElementById('intensity-bar').style.width = score + '%';
-
-            // Reset UI
-            document.getElementById('main-btn').innerText = "Iniciar Entrenamiento";
-            document.getElementById('main-btn').classList.replace('bg-red-500', 'bg-blue-600');
-            document.getElementById('live-activity').classList.add('hidden');
-            
-            changeTab('hoy');
-            
-            // Limpiar entreno
-            document.getElementById('sets-list').innerHTML = '';
-            setIndex = 1;
-            seconds = 0;
-            document.getElementById('timer').innerText = "00:00";
+            document.getElementById('workout-list').innerHTML = '';
+            timerSeconds = 0;
         }
 
         function startTimer() {
-            timerId = setInterval(() => {
-                seconds++;
-                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-                const s = (seconds % 60).toString().padStart(2, '0');
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const m = Math.floor(timerSeconds / 60).toString().padStart(2,'0');
+                const s = (timerSeconds % 60).toString().padStart(2,'0');
                 document.getElementById('timer').innerText = `${m}:${s}`;
             }, 1000);
         }
 
-        // Fecha Actual
-        const d = new Date();
-        const options = { weekday: 'long', day: 'numeric', month: 'long' };
-        document.getElementById('current-date').innerText = d.toLocaleDateString('es-ES', options);
+        // --- INICIALIZACIÓN ---
+        window.onload = () => {
+            const d = new Date();
+            document.getElementById('current-date').innerText = d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+            
+            // Tira de calendario
+            const strip = document.getElementById('calendar-strip');
+            for(let i=-2; i<5; i++) {
+                const day = new Date(); day.setDate(d.getDate() + i);
+                const isToday = i === 0;
+                strip.innerHTML += `
+                    <div class="flex flex-col items-center min-w-[52px] py-3 rounded-2xl ${isToday ? 'bg-blue-600 text-white shadow-lg' : 'bg-white/40 border border-white/20 text-slate-400'}">
+                        <span class="text-[9px] font-black opacity-70">${day.toLocaleDateString('es-ES', {weekday:'short'}).toUpperCase()}</span>
+                        <span class="text-lg font-bold">${day.getDate()}</span>
+                    </div>`;
+            }
 
+            // Grid de calendario modal
+            const grid = document.getElementById('full-calendar-grid');
+            for(let i=1; i<=31; i++) {
+                grid.innerHTML += `<div class="aspect-square flex items-center justify-center rounded-xl bg-slate-50 font-bold text-sm ${i===d.getDate() ? 'bg-blue-600 text-white' : ''}">${i}</div>`;
+            }
+        };
+
+        function switchTab(tab) {
+            if(isTraining) return;
+            document.getElementById('page-title').innerText = tab.charAt(0).toUpperCase() + tab.slice(1);
+            // Lógica de cambio de vista aquí (opcional para esta demo)
+        }
     </script>
 </body>
 </html>
